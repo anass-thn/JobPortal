@@ -5,7 +5,6 @@ import {
   Navigate,
 } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast';
-import LandingPage from './pages/LandingPage/LandingPage';
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/SignUp';
 import JobSeekerDashboard from './pages/JobSeeker/JobSeekerDashboard';
@@ -15,7 +14,9 @@ import UserProfile from './pages/JobSeeker/UserProfile';
 import EmployerDashboard from './pages/Employer/EmployerDashboard';
 import JobpostingForm from './pages/Employer/JobPostingForm';
 import ManageJobs from './pages/Employer/ManageJobs';
-import applicationsViewer from './pages/Employer/applicationsViewer';
+import applicationsViewer from './pages/Employer/ApplicationViewer';
+import LandingPage from './pages/LandingPage/LandingPage';
+import ProtectedRoutes from './routes/ProtectedRoutes';
 import EmployerProfilePage from './pages/Employer/EmployerProfilePage';
 
 const App = () => {
@@ -34,7 +35,7 @@ const App = () => {
           <Route path='/profile' element={<UserProfile />} />
 
           {/* Protected Routes */}
-          <Route element={<ProtectedRoute requiredRole="employer" />}>
+          <Route element={<ProtectedRoutes requiredRole="employer" />}>
             <Route path='/employer/dashboard' element={<EmployerDashboard />} />
             <Route path='/post-job' element={<JobpostingForm />} />
             <Route path='/manage-jobs' element={<ManageJobs />} />
