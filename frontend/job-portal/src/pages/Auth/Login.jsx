@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { authAPI, authUtils } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const Login = () => {
     const [formData, setFormData] = useState({
@@ -12,6 +12,16 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+    const { login, isAuthenticated } = useAuth();
+
+    // Redirect if already authenticated
+    React.useEffect(() => {
+        if (isAuthenticated) {
+            const from = location.state?.from?.pathname || '/find-jobs';
+            navigate(from, { replace: true });
+        }
+    }, [isAuthenticated, navigate, location]);
 
     const handleChange = (e) => {
         setFormData({
@@ -22,34 +32,38 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsLoading(true);
 
         // Basic validation
         if (!formData.email || !formData.password) {
             toast.error('Please fill in all fields');
-            setIsLoading(false);
             return;
         }
 
         if (!/\S+@\S+\.\S+/.test(formData.email)) {
             toast.error('Please enter a valid email address');
-            setIsLoading(false);
             return;
         }
 
         try {
-            const response = await authAPI.login(formData);
+            setIsLoading(true);
+            const result = await login(formData);
             
-            if (response.success) {
-                authUtils.setAuth(response.token, response.user);
-                toast.success('Login successful!');
-                navigate('/dashboard');
-            } else {
-                toast.error(response.message || 'Login failed');
+            if (result.success) {
+                // Redirect based on user type or intended page
+                const from = location.state?.from?.pathname;
+                
+                if (from) {
+                    navigate(from, { replace: true });
+                } else {
+                    // Redirect to appropriate dashboard based on user type
+                    const userType = result.user?.userType;
+                    const redirectPath = userType === 'employer' ? '/employer/dashboard' : '/find-jobs';
+                    navigate(redirectPath, { replace: true });
+                }
             }
         } catch (error) {
-            const message = error.response?.data?.message || 'Login failed. Please try again.';
-            toast.error(message);
+            // Error is already handled by AuthContext
+            console.error('Login error:', error);
         } finally {
             setIsLoading(false);
         }

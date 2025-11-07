@@ -1,22 +1,29 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../context/AuthContext.jsx';
 import './Header.css';
 
 const Header = () => {
   const navigate = useNavigate();
-  
-  // Mock user data - replace with actual user context/state management
-  const user = {
-    fullName: "John Doe", // This should come from your auth context
-    role: "jobseeker" // or "employer"
-  };
+  const { user, isAuthenticated, logout } = useAuth();
 
   const handleDashboardClick = () => {
-    if (user.role === 'employer') {
+    if (user?.userType === 'employer') {
       navigate('/employer/dashboard');
     } else {
       navigate('/find-jobs');
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
+
+  // Get user's full name
+  const getUserName = () => {
+    if (!user) return '';
+    return `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || 'User';
   };
 
   return (
@@ -48,15 +55,34 @@ const Header = () => {
 
         {/* Right side - User info and Dashboard */}
         <div className="header-right">
-          <span className="welcome-text">
-            Welcome, {user.fullName}
-          </span>
-          <button 
-            className="dashboard-btn"
-            onClick={handleDashboardClick}
-          >
-            Dashboard
-          </button>
+          {isAuthenticated && user ? (
+            <>
+              <span className="welcome-text">
+                Welcome, {getUserName()}
+              </span>
+              <button 
+                className="dashboard-btn"
+                onClick={handleDashboardClick}
+              >
+                Dashboard
+              </button>
+              <button 
+                className="logout-btn"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="nav-link">
+                Login
+              </Link>
+              <Link to="/signup" className="dashboard-btn" style={{ textDecoration: 'none' }}>
+                Sign Up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

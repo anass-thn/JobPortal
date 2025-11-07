@@ -5,6 +5,7 @@ import {
   Navigate,
 } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './context/AuthContext.jsx';
 import Login from './pages/Auth/Login';
 import Signup from './pages/Auth/SignUp';
 import JobSeekerDashboard from './pages/JobSeeker/JobSeekerDashboard';
@@ -21,7 +22,7 @@ import EmployerProfilePage from './pages/Employer/EmployerProfilePage';
 
 const App = () => {
   return (
-    <div >
+    <AuthProvider>
       <Router>
         <Routes>
           {/* Public Routes */}
@@ -55,7 +56,7 @@ const App = () => {
         },
       }}
       />
-    </div>
+    </AuthProvider>
   )
 }
 

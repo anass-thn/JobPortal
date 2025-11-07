@@ -36,6 +36,7 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     avatar: { type: String, default: '' },
+    resumeUrl: { type: String, default: '' },
     phone: { type: String, default: '' },
     location: { type: String, default: '' },
     bio: { type: String, default: '', maxlength: 500 },

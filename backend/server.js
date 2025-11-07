@@ -16,6 +16,8 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const jobRoutes = require('./routes/jobs');
 const applicationRoutes = require('./routes/applications');
+const savedRoutes = require('./routes/saved');
+const analyticsRoutes = require('./routes/analytics');
 
 const app = express();
 
@@ -66,6 +68,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
+app.use('/api/saved', savedRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // 404 handler
 app.use('*', (req, res) => {

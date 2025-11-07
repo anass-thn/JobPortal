@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { authAPI, authUtils } from '../../utils/api';
+import { useAuth } from '../../context/AuthContext.jsx';
 
 const SignUp = () => {
     const [formData, setFormData] = useState({
@@ -18,6 +18,16 @@ const SignUp = () => {
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
+    const { register, isAuthenticated } = useAuth();
+
+    // Redirect if already authenticated
+    React.useEffect(() => {
+        if (isAuthenticated) {
+            const from = location.state?.from?.pathname || '/find-jobs';
+            navigate(from, { replace: true });
+        }
+    }, [isAuthenticated, navigate, location]);
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -28,56 +38,79 @@ const SignUp = () => {
     };
 
     const validateForm = () => {
+        // Check all required fields
         if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
-            toast.error('Please fill in all fields');
-            return false;
+            return { valid: false, message: 'Please fill in all fields' };
         }
 
+        // Validate name lengths (max 50 characters as per backend)
+        if (formData.firstName.length > 50) {
+            return { valid: false, message: 'First name must be 50 characters or less' };
+        }
+
+        if (formData.lastName.length > 50) {
+            return { valid: false, message: 'Last name must be 50 characters or less' };
+        }
+
+        // Validate email format
         if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            toast.error('Please enter a valid email address');
-            return false;
+            return { valid: false, message: 'Please enter a valid email address' };
         }
 
+        // Validate password requirements (matching backend: min 8 chars, uppercase, lowercase, number)
         if (formData.password.length < 8) {
-            toast.error('Password must be at least 8 characters long');
-            return false;
+            return { valid: false, message: 'Password must be at least 8 characters long' };
         }
 
+        if (!/[a-z]/.test(formData.password)) {
+            return { valid: false, message: 'Password must contain at least one lowercase letter' };
+        }
+
+        if (!/[A-Z]/.test(formData.password)) {
+            return { valid: false, message: 'Password must contain at least one uppercase letter' };
+        }
+
+        if (!/\d/.test(formData.password)) {
+            return { valid: false, message: 'Password must contain at least one number' };
+        }
+
+        // Check password confirmation
         if (formData.password !== formData.confirmPassword) {
-            toast.error('Passwords do not match');
-            return false;
+            return { valid: false, message: 'Passwords do not match' };
         }
 
+        // Check terms agreement
         if (!formData.agreeToTerms) {
-            toast.error('Please agree to the Terms of Service and Privacy Policy');
-            return false;
+            return { valid: false, message: 'Please agree to the Terms of Service and Privacy Policy' };
         }
 
-        return true;
+        return { valid: true };
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!validateForm()) {
+        const validation = validateForm();
+        if (!validation.valid) {
+            toast.error(validation.message);
             return;
         }
 
-        setIsLoading(true);
-
         try {
-            const response = await authAPI.register(formData);
+            setIsLoading(true);
+            // Prepare registration data (exclude confirmPassword and agreeToTerms)
+            const { confirmPassword, agreeToTerms, ...registrationData } = formData;
+            const result = await register(registrationData);
             
-            if (response.success) {
-                authUtils.setAuth(response.token, response.user);
-                toast.success('Account created successfully!');
-                navigate('/dashboard');
-            } else {
-                toast.error(response.message || 'Registration failed');
+            if (result.success) {
+                // Redirect to appropriate dashboard based on user type from result
+                const userType = result.user?.userType || formData.userType;
+                const redirectPath = userType === 'employer' ? '/employer/dashboard' : '/find-jobs';
+                navigate(redirectPath, { replace: true });
             }
         } catch (error) {
-            const message = error.response?.data?.message || 'Failed to create account. Please try again.';
-            toast.error(message);
+            // Error is already handled by AuthContext
+            console.error('Registration error:', error);
         } finally {
             setIsLoading(false);
         }
