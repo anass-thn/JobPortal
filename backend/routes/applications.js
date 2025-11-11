@@ -2,7 +2,7 @@ const express = require('express');
 const { body, param, query } = require('express-validator');
 const validate = require('../middleware/validation');
 const { protect, authorize } = require('../middleware/auth');
-const { applyToJob, listMyApplications, listApplicationsForJob, updateApplicationStatus } = require('../controllers/applicationController');
+const { applyToJob, listMyApplications, listApplicationsForJob, listEmployerApplications, updateApplicationStatus } = require('../controllers/applicationController');
 const router = express.Router();
 
 // @desc    Test route
@@ -45,6 +45,22 @@ router.get(
     validate,
   ],
   listMyApplications
+);
+
+// @desc    List all applications for employer (employer/admin)
+// @route   GET /api/applications/employer
+// @access  Employer/Admin
+router.get(
+  '/employer',
+  [
+    protect,
+    authorize('employer', 'admin'),
+    query('status').optional().isIn(['pending', 'reviewed', 'shortlisted', 'rejected', 'hired']),
+    query('page').optional().isInt({ min: 1 }),
+    query('limit').optional().isInt({ min: 1, max: 100 }),
+    validate,
+  ],
+  listEmployerApplications
 );
 
 // @desc    List applications for a job (employer/admin)

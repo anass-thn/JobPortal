@@ -22,6 +22,30 @@ const protect = async (req, res, next) => {
   }
 };
 
+// Optional protect - sets req.user if token is valid, but doesn't fail if no token
+const optionalProtect = async (req, res, next) => {
+  try {
+    const auth = req.headers.authorization || '';
+    const token = auth.startsWith('Bearer ') ? auth.split(' ')[1] : null;
+    if (!token) {
+      req.user = null;
+      return next();
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+    if (user && user.isActive) {
+      req.user = user;
+    } else {
+      req.user = null;
+    }
+    next();
+  } catch (err) {
+    req.user = null;
+    next();
+  }
+};
+
 // Restrict to roles: authorize('admin'), authorize('employer','admin'), etc.
 const authorize = (...roles) => (req, res, next) => {
   try {
@@ -35,6 +59,6 @@ const authorize = (...roles) => (req, res, next) => {
   }
 };
 
-module.exports = { generateToken, protect, authorize };
+module.exports = { generateToken, protect, optionalProtect, authorize };
 
 

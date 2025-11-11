@@ -82,6 +82,26 @@ async function listApplicationsForJob(req, res) {
 	}
 }
 
+// GET /api/applications/employer (employer/admin - all applications for employer's jobs)
+async function listEmployerApplications(req, res) {
+	try {
+		const { status, page = 1, limit = 10 } = req.query;
+		const query = { employer: req.user._id };
+		if (status) query.status = status;
+		const pageNum = Math.max(parseInt(page, 10) || 1, 1);
+		const limitNum = Math.min(Math.max(parseInt(limit, 10) || 10, 1), 100);
+		const skip = (pageNum - 1) * limitNum;
+
+		const [items, total] = await Promise.all([
+			Application.find(query).populate('applicant', 'firstName lastName email avatar').populate('job', 'title company').sort('-createdAt').skip(skip).limit(limitNum),
+			Application.countDocuments(query)
+		]);
+		return res.json({ success: true, items, total, page: pageNum, pageSize: limitNum, pages: Math.ceil(total / limitNum) });
+	} catch (e) {
+		return res.status(500).json({ success: false, message: 'Server error' });
+	}
+}
+
 // PATCH /api/applications/:id/status (employer/admin)
 async function updateApplicationStatus(req, res) {
 	try {
@@ -113,4 +133,4 @@ async function updateApplicationStatus(req, res) {
 	}
 }
 
-module.exports = { applyToJob, listMyApplications, listApplicationsForJob, updateApplicationStatus };
+module.exports = { applyToJob, listMyApplications, listApplicationsForJob, listEmployerApplications, updateApplicationStatus };

@@ -262,6 +262,12 @@ export const applicationAPI = {
     return response.data;
   },
 
+  // Get all applications for employer (employer)
+  getEmployerApplications: async (params = {}) => {
+    const response = await api.get('/applications/employer', { params });
+    return response.data;
+  },
+
   // Update application status
   updateApplicationStatus: async (applicationId, statusData) => {
     const response = await api.patch(`/applications/${applicationId}/status`, statusData);

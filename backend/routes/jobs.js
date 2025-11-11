@@ -1,7 +1,7 @@
 const express = require('express');
 const { body } = require('express-validator');
 const validate = require('../middleware/validation');
-const { protect, authorize } = require('../middleware/auth');
+const { protect, optionalProtect, authorize } = require('../middleware/auth');
 const { createJob, getJobById, listJobs, updateJob, deleteJob } = require('../controllers/jobController');
 const router = express.Router();
 
@@ -46,10 +46,10 @@ router.post(
   createJob
 );
 
-// @desc    List jobs (public)
+// @desc    List jobs (public, but supports myJobs=true for authenticated employers)
 // @route   GET /api/jobs
-// @access  Public
-router.get('/', listJobs);
+// @access  Public (optional auth for myJobs filter)
+router.get('/', optionalProtect, listJobs);
 
 // @desc    Get a job by id (public)
 // @route   GET /api/jobs/:id

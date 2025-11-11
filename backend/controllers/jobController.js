@@ -39,15 +39,22 @@ async function getJobById(req, res) {
 	try {
 		const job = await Job.findById(req.params.id);
 		if (!job) return res.status(404).json({ success: false, message: 'Job not found' });
-		// increment views (non-blocking)
-		Job.findByIdAndUpdate(job._id, { $inc: { views: 1 } }).exec();
+		
+		// Increment views only if viewer is not the job owner
+		// This prevents employers from inflating their own job view counts
+		const isOwner = req.user && job.employer && job.employer.toString() === req.user._id.toString();
+		if (!isOwner) {
+			// Increment views (non-blocking) - only for non-owners
+			Job.findByIdAndUpdate(job._id, { $inc: { views: 1 } }).exec();
+		}
+		
 		return res.json({ success: true, job });
 	} catch (e) {
 		return res.status(500).json({ success: false, message: 'Server error' });
 	}
 }
 
-// GET /api/jobs (public list with filters)
+// GET /api/jobs (public list with filters, or employer's jobs if authenticated as employer)
 async function listJobs(req, res) {
 	try {
 		const {
@@ -56,14 +63,28 @@ async function listJobs(req, res) {
 			category,
 			location,
 			experience,
-			status = 'active',
+			status,
 			page = 1,
 			limit = 10,
-			sort = '-createdAt'
+			sort = '-createdAt',
+			myJobs // if true and user is employer, return only their jobs
 		} = req.query;
 
 		const query = {};
-		if (status) query.status = status;
+		
+		// If authenticated as employer and myJobs=true, filter by employer
+		if (req.user && req.user.userType === 'employer' && myJobs === 'true') {
+			query.employer = req.user._id;
+		}
+		
+		// Status filter (default to 'active' only for public, no default for employer's own jobs)
+		if (status) {
+			query.status = status;
+		} else if (!req.user || req.user.userType !== 'employer' || myJobs !== 'true') {
+			// Default to active for public listings
+			query.status = 'active';
+		}
+		
 		if (type) query.type = type;
 		if (category) query.category = category;
 		if (location) query.location = new RegExp(location, 'i');

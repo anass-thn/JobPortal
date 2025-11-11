@@ -15,7 +15,8 @@ import UserProfile from './pages/JobSeeker/UserProfile';
 import EmployerDashboard from './pages/Employer/EmployerDashboard';
 import JobpostingForm from './pages/Employer/JobPostingForm';
 import ManageJobs from './pages/Employer/ManageJobs';
-import applicationsViewer from './pages/Employer/ApplicationViewer';
+import ViewJob from './pages/Employer/ViewJob';
+import ApplicationViewer from './pages/Employer/ApplicationViewer';
 import LandingPage from './pages/LandingPage/LandingPage';
 import ProtectedRoutes from './routes/ProtectedRoutes';
 import EmployerProfilePage from './pages/Employer/EmployerProfilePage';
@@ -40,7 +41,8 @@ const App = () => {
             <Route path='/employer/dashboard' element={<EmployerDashboard />} />
             <Route path='/post-job' element={<JobpostingForm />} />
             <Route path='/manage-jobs' element={<ManageJobs />} />
-            <Route path='/applicants' element={<applicationsViewer />} />
+            <Route path='/employer/job/:jobId' element={<ViewJob />} />
+            <Route path='/applicants' element={<ApplicationViewer />} />
             <Route path='/company-profile' element={<EmployerProfilePage />} />
           </Route>
           {/*catch all route*/}
